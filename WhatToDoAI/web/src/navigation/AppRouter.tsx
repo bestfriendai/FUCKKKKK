@@ -1,0 +1,79 @@
+// WhatToDoAI/web/src/navigation/AppRouter.tsx
+
+import React from 'react';
+import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
+import Navbar from '../components/Navbar';
+import styled from 'styled-components';
+
+// Import Pages/Screens
+import SignInPage from '../screens/SignInPage';
+import SignUpPage from '../screens/SignUpPage';
+import DashboardPage from '../screens/DashboardPage';
+import ActivityDiscoveryPage from '../screens/ActivityDiscoveryPage';
+import ActivityDetailPage from '../screens/ActivityDetailPage';
+import MapViewPage from '../screens/MapViewPage';
+import ItineraryPlannerPage from '../screens/ItineraryPlannerPage';
+import SearchPage from '../screens/SearchPage';
+
+// Placeholder Components
+const ForgotPasswordPage = () => <div>Forgot Password Page (Placeholder)</div>;
+
+// Styled components
+const AppContainer = styled.div`
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+`;
+
+const MainContent = styled.main`
+    flex: 1;
+`;
+
+interface AppRouterProps {
+    isAuthenticated: boolean; // Pass auth state from App.tsx
+}
+
+const AppRouter: React.FC<AppRouterProps> = ({ isAuthenticated }) => {
+    return (
+        <BrowserRouter>
+            <AppContainer>
+                <Navbar />
+                <MainContent>
+                    <Routes>
+                {isAuthenticated ? (
+                    <>
+                        {/* Routes accessible only when logged in */}
+                        <Route path="/dashboard" element={<DashboardPage />} />
+                        <Route path="/discover" element={<ActivityDiscoveryPage />} />
+                        <Route path="/activity/:id" element={<ActivityDetailPage />} />
+                        <Route path="/map" element={<MapViewPage />} />
+                        <Route path="/planner" element={<ItineraryPlannerPage />} />
+                        <Route path="/search" element={<SearchPage />} />
+
+                        {/* Redirect root to dashboard if logged in */}
+                        <Route path="/" element={<Navigate to="/dashboard" replace />} />
+                        {/* Redirect auth routes away if already logged in */}
+                        <Route path="/signin" element={<Navigate to="/dashboard" replace />} />
+                        <Route path="/signup" element={<Navigate to="/dashboard" replace />} />
+                    </>
+                ) : (
+                    <>
+                        {/* Routes accessible only when logged out */}
+                        <Route path="/signin" element={<SignInPage />} />
+                        <Route path="/signup" element={<SignUpPage />} />
+                        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+
+                        {/* Redirect root and any other path to signin if not logged in */}
+                        <Route path="*" element={<Navigate to="/signin" replace />} />
+                    </>
+                )}
+                  {/* Add routes accessible regardless of auth state if needed */}
+                  {/* <Route path="/about" element={<AboutPage />} /> */}
+                    </Routes>
+                </MainContent>
+            </AppContainer>
+        </BrowserRouter>
+    );
+};
+
+export default AppRouter;

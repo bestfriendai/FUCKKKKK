@@ -1,0 +1,76 @@
+// WhatToDoAI/mobile/src/components/SearchBar.tsx
+
+import React, { useState } from 'react';
+import {
+    Input,
+    InputField,
+    InputSlot,
+    Icon,
+    Pressable, // Import Pressable for the icon button
+    HStack, // Import HStack for layout
+} from '@gluestack-ui/themed';
+import { SearchIcon, XIcon } from 'lucide-react-native'; // Use appropriate icons
+
+interface SearchBarProps {
+    placeholder?: string;
+    onSearch: (query: string) => void;
+    initialQuery?: string;
+    onChangeQuery?: (query: string) => void;
+}
+
+const SearchBar: React.FC<SearchBarProps> = ({
+    placeholder = "Search...",
+    onSearch,
+    initialQuery = '',
+    onChangeQuery,
+}) => {
+    const [query, setQuery] = useState(initialQuery);
+
+    const handleTextChange = (text: string) => {
+        setQuery(text);
+        onChangeQuery?.(text); // Notify parent if needed
+    };
+
+    const handleClear = () => {
+        setQuery('');
+        onChangeQuery?.('');
+        // Optionally trigger search with empty query or just clear
+        // onSearch('');
+    };
+
+    const handleSubmit = () => {
+        onSearch(query);
+    };
+
+    return (
+        <HStack space="sm" alignItems="center" w="100%">
+            <Input variant="outline" size="md" isDisabled={false} isInvalid={false} isReadOnly={false} flex={1}>
+                <InputSlot pl="$3">
+                    <Icon as={SearchIcon} />
+                </InputSlot>
+                <InputField
+                    placeholder={placeholder}
+                    value={query}
+                    onChangeText={handleTextChange}
+                    onSubmitEditing={handleSubmit} // Trigger search on keyboard submit
+                    returnKeyType="search"
+                />
+                {query.length > 0 && (
+                    <InputSlot pr="$3">
+                        <Pressable onPress={handleClear}>
+                            <Icon as={XIcon} />
+                        </Pressable>
+                    </InputSlot>
+                )}
+            </Input>
+            {/* Optional: Add a separate search button if needed */}
+            {/*
+            <Button onPress={handleSubmit} size="md">
+                <ButtonText>Search</ButtonText>
+            </Button>
+            */}
+        </HStack>
+    );
+};
+
+export default SearchBar;

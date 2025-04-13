@@ -1,0 +1,138 @@
+// WhatToDoAI/mobile/src/screens/SignInScreen.tsx
+
+import React, { useState } from 'react';
+import {
+    Box,
+    Heading,
+    VStack,
+    FormControl,
+    Input,
+    InputField,
+    Button,
+    ButtonText,
+    Text,
+    Link,
+    LinkText,
+    Spinner, // Import Spinner for loading indication
+    Icon, // For input icons
+    InputSlot, // For input icons
+    Pressable, // For password visibility toggle
+    HStack, // Import HStack
+} from '@gluestack-ui/themed';
+import { AlertTriangle, EyeIcon, EyeOffIcon } from 'lucide-react-native'; // Icons
+import { KeyboardAvoidingView, Platform } from 'react-native';
+import { signIn } from '../services/auth';
+import { AuthStackParamList } from '../navigation/types'; // Assuming navigation types are defined here
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+
+// Define screen props based on the navigation stack
+type SignInScreenProps = NativeStackScreenProps<AuthStackParamList, 'SignIn'>;
+
+const SignInScreen: React.FC<SignInScreenProps> = ({ navigation }) => {
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [showPassword, setShowPassword] = useState(false);
+
+    const handleSignIn = async () => {
+        if (!email || !password) {
+            setError('Please enter both email and password.');
+            return;
+        }
+        setError(null);
+        setLoading(true);
+
+        try {
+            const { user, session } = await signIn({ email, password });
+            console.log('Sign in successful:', user);
+            // On successful sign-in, Supabase client handles the session.
+            // The main navigator should automatically detect the session change.
+            // No explicit navigation might be needed if App.tsx handles auth state.
+            // If explicit navigation is needed:
+            // navigation.replace('MainNavigator'); // Or navigate to the main part of your app
+        } catch (err: any) {
+            console.error('Sign in failed:', err);
+            setError(err.message || 'Sign in failed. Please check your credentials.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const toggleShowPassword = () => {
+        setShowPassword(!showPassword);
+    };
+
+    return (
+        <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={{ flex: 1 }}
+        >
+            <Box flex={1} justifyContent="center" alignItems="center" p="$5" bg="$backgroundLight0">
+                <VStack space="md" w="100%" maxW="$80">
+                    <Heading size="2xl" textAlign="center" mb="$5">
+                        Welcome Back!
+                    </Heading>
+
+                    {error && (
+                        <Box bg="$error100" p="$3" borderRadius="$md" mb="$4">
+                            <HStack space="sm" alignItems="center">
+                                  <Icon as={AlertTriangle} color="$error700" />
+                                  <Text color="$error700">{error}</Text>
+                            </HStack>
+                        </Box>
+                    )}
+
+                    <FormControl isRequired>
+                        <FormControl.Label>
+                            <Text>Email</Text>
+                        </FormControl.Label>
+                        <Input>
+                            <InputField
+                                type="text"
+                                placeholder="Enter your email"
+                                value={email}
+                                onChangeText={setEmail}
+                                autoCapitalize="none"
+                                keyboardType="email-address"
+                            />
+                        </Input>
+                    </FormControl>
+
+                    <FormControl isRequired>
+                        <FormControl.Label>
+                            <Text>Password</Text>
+                        </FormControl.Label>
+                        <Input>
+                            <InputField
+                                type={showPassword ? 'text' : 'password'}
+                                placeholder="Enter your password"
+                                value={password}
+                                onChangeText={setPassword}
+                            />
+                              <InputSlot pr="$3" onPress={toggleShowPassword}>
+                                    <Icon as={showPassword ? EyeIcon : EyeOffIcon} color="$textDark500"/>
+                              </InputSlot>
+                        </Input>
+                          <Link onPress={() => navigation.navigate('ForgotPassword')} mt="$1" alignSelf='flex-end'>
+                                <LinkText size="sm">Forgot Password?</LinkText>
+                          </Link>
+                    </FormControl>
+
+                    <Button onPress={handleSignIn} disabled={loading} mt="$5">
+                        {loading ? <Spinner color="$white" /> : <ButtonText>Sign In</ButtonText>}
+                    </Button>
+
+                    <HStack justifyContent="center" mt="$5">
+                        <Text size="sm">Don't have an account? </Text>
+                        <Link onPress={() => navigation.navigate('SignUp')}>
+                            <LinkText size="sm">Sign Up</LinkText>
+                        </Link>
+                    </HStack>
+                </VStack>
+            </Box>
+        </KeyboardAvoidingView>
+    );
+};
+
+export default SignInScreen;

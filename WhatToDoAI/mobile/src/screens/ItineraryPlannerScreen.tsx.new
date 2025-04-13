@@ -1,0 +1,315 @@
+// WhatToDoAI/mobile/src/screens/ItineraryPlannerScreen.tsx
+
+import React, { useState, useEffect } from 'react';
+import { ScrollView, Alert } from 'react-native';
+import {
+  Box,
+  VStack,
+  Heading,
+  Text,
+  Button,
+  ButtonText,
+  Input,
+  InputField,
+  FormControl,
+  TextArea,
+  TextAreaInput,
+  Spinner,
+  Center,
+  HStack,
+  Divider,
+  Icon,
+  Pressable,
+} from '@gluestack-ui/themed';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { MainStackParamList } from '../navigation/types';
+import { Itinerary, ItineraryItem } from '../types/itinerary';
+import { Activity } from '../types/activity';
+import { createItinerary, updateItinerary, getItineraryById } from '../services/itinerary';
+import { Calendar, PlusCircle, Trash2, MapPin, Clock } from 'lucide-react-native';
+import DateTimePicker from '@react-native-community/datetimepicker';
+
+type ItineraryPlannerScreenProps = NativeStackScreenProps<MainStackParamList, 'ItineraryPlanner'>;
+
+const ItineraryPlannerScreen: React.FC<ItineraryPlannerScreenProps> = ({ navigation, route }) => {
+  const { itineraryId, activity } = route.params || {};
+  const [itinerary, setItinerary] = useState<Partial<Itinerary>>({
+    title: '',
+    description: '',
+    start_date: new Date().toISOString(),
+    end_date: new Date().toISOString(),
+    items: [],
+    is_public: false,
+  });
+  const [loading, setLoading] = useState(false);
+  const [showStartDatePicker, setShowStartDatePicker] = useState(false);
+  const [showEndDatePicker, setShowEndDatePicker] = useState(false);
+
+  useEffect(() => {
+    if (itineraryId) {
+      fetchItinerary(itineraryId);
+    }
+  }, [itineraryId]);
+
+  useEffect(() => {
+    if (activity) {
+      addActivityToItinerary(activity);
+    }
+  }, [activity]);
+
+  const fetchItinerary = async (id: string) => {
+    setLoading(true);
+    try {
+      const data = await getItineraryById(id);
+      if (data) {
+        setItinerary(data);
+      }
+    } catch (error) {
+      console.error('Error fetching itinerary:', error);
+      Alert.alert('Error', 'Failed to load itinerary. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const addActivityToItinerary = (activity: Activity) => {
+    const newItem: Partial<ItineraryItem> = {
+      activity_id: activity.activity_id,
+      activity,
+      order: itinerary.items?.length || 0,
+    };
+
+    setItinerary(prev => ({
+      ...prev,
+      items: [...(prev.items || []), newItem as ItineraryItem],
+    }));
+  };
+
+  const removeActivityFromItinerary = (index: number) => {
+    setItinerary(prev => ({
+      ...prev,
+      items: prev.items?.filter((_, i) => i !== index) || [],
+    }));
+  };
+
+  const handleSaveItinerary = async () => {
+    if (!itinerary.title) {
+      Alert.alert('Error', 'Please enter a title for your itinerary.');
+      return;
+    }
+
+    setLoading(true);
+    try {
+      if (itineraryId) {
+        await updateItinerary(itineraryId, itinerary as Itinerary);
+        Alert.alert('Success', 'Itinerary updated successfully!');
+      } else {
+        await createItinerary(itinerary as Omit<Itinerary, 'itinerary_id' | 'created_at' | 'updated_at'>);
+        Alert.alert('Success', 'Itinerary created successfully!');
+      }
+      navigation.goBack();
+    } catch (error) {
+      console.error('Error saving itinerary:', error);
+      Alert.alert('Error', 'Failed to save itinerary. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleStartDateChange = (event: any, selectedDate?: Date) => {
+    setShowStartDatePicker(false);
+    if (selectedDate) {
+      setItinerary(prev => ({
+        ...prev,
+        start_date: selectedDate.toISOString(),
+      }));
+    }
+  };
+
+  const handleEndDateChange = (event: any, selectedDate?: Date) => {
+    setShowEndDatePicker(false);
+    if (selectedDate) {
+      setItinerary(prev => ({
+        ...prev,
+        end_date: selectedDate.toISOString(),
+      }));
+    }
+  };
+
+  if (loading && itineraryId) {
+    return (
+      <Center flex={1}>
+        <Spinner size="large" />
+        <Text mt="$2">Loading itinerary...</Text>
+      </Center>
+    );
+  }
+
+  return (
+    <Box flex={1} bg="$backgroundLight0" safeAreaTop>
+      <ScrollView contentContainerStyle={{ padding: 16 }}>
+        <Heading size="xl" mb="$4">
+          {itineraryId ? 'Edit Itinerary' : 'Create Itinerary'}
+        </Heading>
+
+        <VStack space="md" mb="$6">
+          <FormControl isRequired>
+            <FormControl.Label>
+              <Text>Title</Text>
+            </FormControl.Label>
+            <Input>
+              <InputField
+                placeholder="Enter itinerary title"
+                value={itinerary.title}
+                onChangeText={(text) => setItinerary(prev => ({ ...prev, title: text }))}
+              />
+            </Input>
+          </FormControl>
+
+          <FormControl>
+            <FormControl.Label>
+              <Text>Description</Text>
+            </FormControl.Label>
+            <TextArea>
+              <TextAreaInput
+                placeholder="Enter description"
+                value={itinerary.description}
+                onChangeText={(text) => setItinerary(prev => ({ ...prev, description: text }))}
+              />
+            </TextArea>
+          </FormControl>
+
+          <HStack space="md" justifyContent="space-between">
+            <FormControl flex={1}>
+              <FormControl.Label>
+                <Text>Start Date</Text>
+              </FormControl.Label>
+              <Pressable onPress={() => setShowStartDatePicker(true)}>
+                <HStack
+                  borderWidth={1}
+                  borderColor="$borderLight300"
+                  borderRadius="$md"
+                  p="$3"
+                  alignItems="center"
+                >
+                  <Icon as={Calendar} size="sm" mr="$2" />
+                  <Text>
+                    {new Date(itinerary.start_date || Date.now()).toLocaleDateString()}
+                  </Text>
+                </HStack>
+              </Pressable>
+            </FormControl>
+
+            <FormControl flex={1}>
+              <FormControl.Label>
+                <Text>End Date</Text>
+              </FormControl.Label>
+              <Pressable onPress={() => setShowEndDatePicker(true)}>
+                <HStack
+                  borderWidth={1}
+                  borderColor="$borderLight300"
+                  borderRadius="$md"
+                  p="$3"
+                  alignItems="center"
+                >
+                  <Icon as={Calendar} size="sm" mr="$2" />
+                  <Text>
+                    {new Date(itinerary.end_date || Date.now()).toLocaleDateString()}
+                  </Text>
+                </HStack>
+              </Pressable>
+            </FormControl>
+          </HStack>
+        </VStack>
+
+        <Heading size="md" mb="$2">Activities</Heading>
+        
+        {itinerary.items && itinerary.items.length > 0 ? (
+          <VStack space="md" mb="$4">
+            {itinerary.items.map((item, index) => (
+              <Box
+                key={index}
+                borderWidth={1}
+                borderColor="$borderLight300"
+                borderRadius="$md"
+                p="$3"
+              >
+                <HStack justifyContent="space-between" alignItems="center">
+                  <VStack flex={1}>
+                    <Text fontWeight="bold">{item.activity?.name || 'Unnamed Activity'}</Text>
+                    {item.activity?.venue && (
+                      <HStack alignItems="center" mt="$1">
+                        <Icon as={MapPin} size="xs" mr="$1" />
+                        <Text size="sm" color="$textLight600">
+                          {item.activity.venue.name || 'Unknown Location'}
+                        </Text>
+                      </HStack>
+                    )}
+                    {item.start_time && (
+                      <HStack alignItems="center" mt="$1">
+                        <Icon as={Clock} size="xs" mr="$1" />
+                        <Text size="sm" color="$textLight600">
+                          {new Date(item.start_time).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                        </Text>
+                      </HStack>
+                    )}
+                  </VStack>
+                  <Pressable onPress={() => removeActivityFromItinerary(index)}>
+                    <Icon as={Trash2} color="$error700" />
+                  </Pressable>
+                </HStack>
+              </Box>
+            ))}
+          </VStack>
+        ) : (
+          <Box
+            borderWidth={1}
+            borderColor="$borderLight300"
+            borderRadius="$md"
+            p="$4"
+            mb="$4"
+            alignItems="center"
+          >
+            <Text color="$textLight600" mb="$2">No activities added yet</Text>
+            <Button
+              variant="outline"
+              onPress={() => navigation.navigate('Search')}
+              size="sm"
+            >
+              <Icon as={PlusCircle} mr="$1" />
+              <ButtonText>Add Activities</ButtonText>
+            </Button>
+          </Box>
+        )}
+
+        <Button
+          onPress={handleSaveItinerary}
+          mb="$4"
+          isDisabled={loading}
+        >
+          {loading ? <Spinner color="$white" /> : <ButtonText>{itineraryId ? 'Update Itinerary' : 'Create Itinerary'}</ButtonText>}
+        </Button>
+      </ScrollView>
+
+      {showStartDatePicker && (
+        <DateTimePicker
+          value={new Date(itinerary.start_date || Date.now())}
+          mode="date"
+          display="default"
+          onChange={handleStartDateChange}
+        />
+      )}
+
+      {showEndDatePicker && (
+        <DateTimePicker
+          value={new Date(itinerary.end_date || Date.now())}
+          mode="date"
+          display="default"
+          onChange={handleEndDateChange}
+        />
+      )}
+    </Box>
+  );
+};
+
+export default ItineraryPlannerScreen;

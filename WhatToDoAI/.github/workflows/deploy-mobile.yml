@@ -1,0 +1,50 @@
+name: Deploy Mobile App
+
+on:
+  push:
+    branches: [ main ]
+    paths:
+      - 'mobile/**'
+      - '.github/workflows/deploy-mobile.yml'
+
+jobs:
+  build-and-submit:
+    name: Build and Submit
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '18'
+          cache: 'npm'
+      
+      - name: Setup Expo
+        uses: expo/expo-github-action@v8
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+      
+      - name: Install dependencies
+        run: cd mobile && npm ci
+      
+      - name: Configure environment variables
+        run: |
+          cd mobile
+          echo "SUPABASE_URL=${{ secrets.SUPABASE_URL }}" >> .env
+          echo "SUPABASE_ANON_KEY=${{ secrets.SUPABASE_ANON_KEY }}" >> .env
+          echo "EVENTBRITE_API_KEY=${{ secrets.EVENTBRITE_API_KEY }}" >> .env
+          echo "TRIPADVISOR_API_KEY=${{ secrets.TRIPADVISOR_API_KEY }}" >> .env
+      
+      # Build for preview
+      - name: Build preview
+        run: cd mobile && eas build --platform all --profile preview
+      
+      # Submit to stores (uncomment when ready for production)
+      # - name: Build production
+      #   run: cd mobile && eas build --platform all --profile production --non-interactive
+      # 
+      # - name: Submit to stores
+      #   run: cd mobile && eas submit --platform all --latest

@@ -1,0 +1,203 @@
+// WhatToDoAI/mobile/src/screens/SignUpScreen.tsx
+
+import React, { useState } from 'react';
+import {
+    Box,
+    Heading,
+    VStack,
+    FormControl,
+    Input,
+    InputField,
+    Button,
+    ButtonText,
+    Text,
+    Link,
+    LinkText,
+    Spinner,
+    Icon,
+    InputSlot,
+    Pressable,
+    HStack,
+    ScrollView, // Use ScrollView for longer forms
+} from '@gluestack-ui/themed';
+import { AlertTriangle, EyeIcon, EyeOffIcon } from 'lucide-react-native';
+import { KeyboardAvoidingView, Platform, Alert } from 'react-native';
+import { signUp } from '../services/auth';
+import { AuthStackParamList } from '../navigation/types';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { VALIDATION } from '../config'; // Import validation constants
+
+type SignUpScreenProps = NativeStackScreenProps<AuthStackParamList, 'SignUp'>;
+
+const SignUpScreen: React.FC<SignUpScreenProps> = ({ navigation }) => {
+    const [username, setUsername] = useState('');
+    const [email, setEmail] = useState('');
+    const [password, setPassword] = useState('');
+    const [confirmPassword, setConfirmPassword] = useState('');
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+    const [showPassword, setShowPassword] = useState(false);
+    const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+
+    const validateInputs = (): boolean => {
+        if (!username || !email || !password || !confirmPassword) {
+            setError('Please fill in all fields.');
+            return false;
+        }
+        if (username.length < VALIDATION.MIN_USERNAME_LENGTH) {
+              setError(`Username must be at least ${VALIDATION.MIN_USERNAME_LENGTH} characters long.`);
+              return false;
+        }
+        // Basic email format check (more robust validation recommended)
+        if (!/\S+@\S+\.\S+/.test(email)) {
+                setError('Please enter a valid email address.');
+                return false;
+        }
+        if (password.length < VALIDATION.MIN_PASSWORD_LENGTH) {
+            setError(`Password must be at least ${VALIDATION.MIN_PASSWORD_LENGTH} characters long.`);
+            return false;
+        }
+        if (password !== confirmPassword) {
+            setError('Passwords do not match.');
+            return false;
+        }
+        setError(null);
+        return true;
+    };
+
+    const handleSignUp = async () => {
+        if (!validateInputs()) {
+            return;
+        }
+        setLoading(true);
+
+        try {
+            const { user, session } = await signUp({ email, password, username });
+            console.log('Sign up successful:', user);
+            // Show success message - user needs to check email for confirmation
+            Alert.alert(
+                'Sign Up Successful',
+                'Please check your email to confirm your account before signing in.',
+                [{ text: 'OK', onPress: () => navigation.navigate('SignIn') }]
+            );
+            // Optionally navigate back to SignIn or handle session automatically
+            // navigation.navigate('SignIn');
+        } catch (err: any) {
+            console.error('Sign up failed:', err);
+            setError(err.message || 'Sign up failed. Please try again.');
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    const toggleShowPassword = () => setShowPassword(!showPassword);
+    const toggleShowConfirmPassword = () => setShowConfirmPassword(!showConfirmPassword);
+
+    return (
+        <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={{ flex: 1 }}
+        >
+            <ScrollView contentContainerStyle={{ flexGrow: 1 }}>
+                <Box flex={1} justifyContent="center" alignItems="center" p="$5" bg="$backgroundLight0">
+                    <VStack space="md" w="100%" maxW="$80">
+                        <Heading size="2xl" textAlign="center" mb="$5">
+                            Create Account
+                        </Heading>
+
+                        {error && (
+                            <Box bg="$error100" p="$3" borderRadius="$md" mb="$4">
+                                <HStack space="sm" alignItems="center">
+                                      <Icon as={AlertTriangle} color="$error700" />
+                                      <Text color="$error700">{error}</Text>
+                                </HStack>
+                            </Box>
+                        )}
+
+                        <FormControl isRequired isInvalid={!!error && error.includes('Username')}>
+                            <FormControl.Label>
+                                <Text>Username</Text>
+                            </FormControl.Label>
+                            <Input>
+                                <InputField
+                                    type="text"
+                                    placeholder="Choose a username"
+                                    value={username}
+                                    onChangeText={setUsername}
+                                    autoCapitalize="none"
+                                />
+                            </Input>
+                              {/* Optional: Add FormControl.ErrorMessage */}
+                        </FormControl>
+
+                        <FormControl isRequired isInvalid={!!error && error.includes('email')}>
+                            <FormControl.Label>
+                                <Text>Email</Text>
+                            </FormControl.Label>
+                            <Input>
+                                <InputField
+                                    type="text"
+                                    placeholder="Enter your email"
+                                    value={email}
+                                    onChangeText={setEmail}
+                                    autoCapitalize="none"
+                                    keyboardType="email-address"
+                                />
+                            </Input>
+                              {/* Optional: Add FormControl.ErrorMessage */}
+                        </FormControl>
+
+                        <FormControl isRequired isInvalid={!!error && (error.includes('Password') || error.includes('match'))}>
+                            <FormControl.Label>
+                                <Text>Password</Text>
+                            </FormControl.Label>
+                            <Input>
+                                <InputField
+                                    type={showPassword ? 'text' : 'password'}
+                                    placeholder="Create a password"
+                                    value={password}
+                                    onChangeText={setPassword}
+                                />
+                                  <InputSlot pr="$3" onPress={toggleShowPassword}>
+                                        <Icon as={showPassword ? EyeIcon : EyeOffIcon} color="$textDark500"/>
+                                  </InputSlot>
+                            </Input>
+                              {/* Optional: Add FormControl.ErrorMessage */}
+                        </FormControl>
+
+                        <FormControl isRequired isInvalid={!!error && error.includes('match')}>
+                            <FormControl.Label>
+                                <Text>Confirm Password</Text>
+                            </FormControl.Label>
+                            <Input>
+                                <InputField
+                                    type={showConfirmPassword ? 'text' : 'password'}
+                                    placeholder="Confirm your password"
+                                    value={confirmPassword}
+                                    onChangeText={setConfirmPassword}
+                                />
+                                  <InputSlot pr="$3" onPress={toggleShowConfirmPassword}>
+                                        <Icon as={showConfirmPassword ? EyeIcon : EyeOffIcon} color="$textDark500"/>
+                                  </InputSlot>
+                            </Input>
+                              {/* Optional: Add FormControl.ErrorMessage */}
+                        </FormControl>
+
+                        <Button onPress={handleSignUp} disabled={loading} mt="$5">
+                            {loading ? <Spinner color="$white" /> : <ButtonText>Sign Up</ButtonText>}
+                        </Button>
+
+                        <HStack justifyContent="center" mt="$5">
+                            <Text size="sm">Already have an account? </Text>
+                            <Link onPress={() => navigation.navigate('SignIn')}>
+                                <LinkText size="sm">Sign In</LinkText>
+                            </Link>
+                        </HStack>
+                    </VStack>
+                </Box>
+            </ScrollView>
+        </KeyboardAvoidingView>
+    );
+};
+
+export default SignUpScreen;

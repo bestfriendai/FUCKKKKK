@@ -1,0 +1,39 @@
+// WhatToDoAI/mobile/src/navigation/types.ts
+
+import { NavigatorScreenParams } from '@react-navigation/native'; // Import base type
+import { Activity } from '../types/activity'; // Assuming Activity type is defined
+
+// Parameter list for the Authentication stack (screens shown before login)
+export type AuthStackParamList = {
+    SignIn: undefined; // No parameters expected for SignIn screen
+    SignUp: undefined; // No parameters expected for SignUp screen
+    ForgotPassword: undefined; // No parameters expected for ForgotPassword screen
+};
+
+// Parameter list for the Main application stack (screens shown after login)
+// This will likely include nested navigators (e.g., a Bottom Tab Navigator)
+export type MainStackParamList = {
+    Home: undefined;
+    Search: undefined; // Or maybe { initialQuery?: string }
+    MapView: undefined; // Or maybe { initialRegion?: Region }
+    ItineraryPlanner: { itineraryId?: string }; // Optional ID to load existing itinerary
+    ActivityDetail: { activity: Activity }; // Pass the full activity object or just ID
+    // Add other main screens/navigators here (e.g., Profile, Settings)
+};
+
+// Optional: Root navigator combining Auth and Main stacks
+// Useful if your App.tsx switches between these stacks
+export type RootStackParamList = {
+    Auth: NavigatorScreenParams<AuthStackParamList>; // Nested Auth stack
+    Main: NavigatorScreenParams<MainStackParamList>; // Nested Main stack
+    // Add any root-level modal screens here if needed
+};
+
+// You can also define types for specific navigators like Bottom Tabs
+export type MainBottomTabParamList = {
+        HomeTab: undefined; // Renaming 'Home' to avoid conflict if needed
+        SearchTab: undefined;
+        MapTab: undefined;
+        ItineraryTab: undefined;
+        // ProfileTab: undefined;
+};

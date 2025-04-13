@@ -1,0 +1,273 @@
+// WhatToDoAI/mobile/src/screens/MapViewScreen.tsx
+
+import React, { useState, useEffect, useRef } from 'react';
+import { StyleSheet, Dimensions, Platform } from 'react-native';
+import MapView, { Marker, Callout, Region, PROVIDER_GOOGLE } from 'react-native-maps';
+import { Box, Center, Spinner, Text, Heading, VStack, HStack, Icon, Pressable } from '@gluestack-ui/themed';
+import { NativeStackScreenProps } from '@react-navigation/native-stack';
+import { MainStackParamList } from '../navigation/types';
+import { Activity } from '../types/activity';
+import { searchActivities } from '../services/activities';
+import { MapPin, Navigation, List, Grid, Search } from 'lucide-react-native';
+import * as Location from 'expo-location';
+import { MAP_CONFIG } from '../config';
+
+type MapViewScreenProps = NativeStackScreenProps<MainStackParamList, 'MapView'>;
+
+const { width, height } = Dimensions.get('window');
+const ASPECT_RATIO = width / height;
+const LATITUDE_DELTA = 0.0922;
+const LONGITUDE_DELTA = LATITUDE_DELTA * ASPECT_RATIO;
+
+const MapViewScreen: React.FC<MapViewScreenProps> = ({ navigation, route }) => {
+  const mapRef = useRef<MapView>(null);
+  const [activities, setActivities] = useState<Activity[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [region, setRegion] = useState<Region>({
+    latitude: MAP_CONFIG.DEFAULT_LATITUDE,
+    longitude: MAP_CONFIG.DEFAULT_LONGITUDE,
+    latitudeDelta: LATITUDE_DELTA,
+    longitudeDelta: LONGITUDE_DELTA,
+  });
+  const [userLocation, setUserLocation] = useState<{ latitude: number; longitude: number } | null>(null);
+  const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
+
+  useEffect(() => {
+    getUserLocation();
+  }, []);
+
+  useEffect(() => {
+    if (userLocation) {
+      setRegion({
+        ...region,
+        latitude: userLocation.latitude,
+        longitude: userLocation.longitude,
+      });
+      fetchActivities(userLocation.latitude, userLocation.longitude);
+    }
+  }, [userLocation]);
+
+  const getUserLocation = async () => {
+    try {
+      const { status } = await Location.requestForegroundPermissionsAsync();
+      if (status !== 'granted') {
+        setError('Permission to access location was denied');
+        setLoading(false);
+        // Fall back to default location
+        fetchActivities(MAP_CONFIG.DEFAULT_LATITUDE, MAP_CONFIG.DEFAULT_LONGITUDE);
+        return;
+      }
+
+      const location = await Location.getCurrentPositionAsync({});
+      setUserLocation({
+        latitude: location.coords.latitude,
+        longitude: location.coords.longitude,
+      });
+    } catch (error) {
+      console.error('Error getting location:', error);
+      setError('Could not get your location');
+      setLoading(false);
+      // Fall back to default location
+      fetchActivities(MAP_CONFIG.DEFAULT_LATITUDE, MAP_CONFIG.DEFAULT_LONGITUDE);
+    }
+  };
+
+  const fetchActivities = async (latitude: number, longitude: number) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await searchActivities({
+        location: {
+          latitude,
+          longitude,
+          radius: MAP_CONFIG.DEFAULT_RADIUS,
+        },
+        pageSize: 50,
+      });
+      
+      if (result) {
+        setActivities(result.filter(activity => 
+          activity.latitude && activity.longitude || 
+          (activity.venue?.latitude && activity.venue?.longitude)
+        ));
+      } else {
+        setError('Failed to fetch activities');
+      }
+    } catch (error: any) {
+      console.error('Error fetching activities:', error);
+      setError(error.message || 'Failed to fetch activities');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleMarkerPress = (activity: Activity) => {
+    setSelectedActivity(activity);
+  };
+
+  const handleCalloutPress = (activity: Activity) => {
+    navigation.navigate('ActivityDetail', { activity });
+  };
+
+  const centerOnUserLocation = () => {
+    if (userLocation && mapRef.current) {
+      mapRef.current.animateToRegion({
+        latitude: userLocation.latitude,
+        longitude: userLocation.longitude,
+        latitudeDelta: LATITUDE_DELTA / 2,
+        longitudeDelta: LONGITUDE_DELTA / 2,
+      }, 1000);
+    }
+  };
+
+  const navigateToSearch = () => {
+    navigation.navigate('Search');
+  };
+
+  const navigateToList = () => {
+    navigation.navigate('Home');
+  };
+
+  if (loading && !activities.length) {
+    return (
+      <Center flex={1}>
+        <Spinner size="large" />
+        <Text mt="$2">Loading activities...</Text>
+      </Center>
+    );
+  }
+
+  return (
+    <Box flex={1}>
+      <MapView
+        ref={mapRef}
+        style={styles.map}
+        provider={PROVIDER_GOOGLE}
+        region={region}
+        onRegionChangeComplete={setRegion}
+        showsUserLocation
+        showsMyLocationButton={false}
+      >
+        {activities.map((activity) => {
+          // Use venue coordinates if available, otherwise use activity coordinates
+          const latitude = activity.venue?.latitude || activity.latitude;
+          const longitude = activity.venue?.longitude || activity.longitude;
+          
+          // Skip if no coordinates
+          if (!latitude || !longitude) return null;
+          
+          return (
+            <Marker
+              key={activity.activity_id}
+              coordinate={{
+                latitude,
+                longitude,
+              }}
+              title={activity.name}
+              description={activity.shortDescription}
+              onPress={() => handleMarkerPress(activity)}
+              pinColor={activity.source === 'Eventbrite' ? '#F95700' : '#4299E1'}
+            >
+              <Callout onPress={() => handleCalloutPress(activity)}>
+                <Box width={200} padding={8}>
+                  <Text fontWeight="bold">{activity.name}</Text>
+                  {activity.shortDescription && (
+                    <Text numberOfLines={2} fontSize={12} color="#666" marginTop={4}>
+                      {activity.shortDescription}
+                    </Text>
+                  )}
+                  <Text fontSize={12} color="#4299E1" fontStyle="italic" marginTop={4}>
+                    Tap for details
+                  </Text>
+                </Box>
+              </Callout>
+            </Marker>
+          );
+        })}
+      </MapView>
+
+      {/* Floating action buttons */}
+      <VStack position="absolute" right={16} bottom={100} space="sm">
+        <Pressable
+          onPress={centerOnUserLocation}
+          bg="$white"
+          p="$3"
+          borderRadius="$full"
+          shadow="$2"
+        >
+          <Icon as={Navigation} color="$blue500" />
+        </Pressable>
+        
+        <Pressable
+          onPress={navigateToSearch}
+          bg="$white"
+          p="$3"
+          borderRadius="$full"
+          shadow="$2"
+        >
+          <Icon as={Search} color="$blue500" />
+        </Pressable>
+        
+        <Pressable
+          onPress={navigateToList}
+          bg="$white"
+          p="$3"
+          borderRadius="$full"
+          shadow="$2"
+        >
+          <Icon as={List} color="$blue500" />
+        </Pressable>
+      </VStack>
+
+      {/* Error message */}
+      {error && (
+        <Box
+          position="absolute"
+          top={50}
+          left={16}
+          right={16}
+          bg="$error100"
+          p="$3"
+          borderRadius="$md"
+        >
+          <Text color="$error700">{error}</Text>
+        </Box>
+      )}
+
+      {/* Activity count */}
+      <Box
+        position="absolute"
+        top={16}
+        left={16}
+        right={16}
+        bg="$white"
+        p="$3"
+        borderRadius="$md"
+        shadow="$2"
+      >
+        <HStack justifyContent="space-between" alignItems="center">
+          <Text fontWeight="bold">
+            {activities.length} {activities.length === 1 ? 'Activity' : 'Activities'} Found
+          </Text>
+          <HStack space="sm">
+            <Box bg={activities.length > 0 ? '$blue100' : '$gray100'} px="$2" py="$1" borderRadius="$md">
+              <Text color={activities.length > 0 ? '$blue700' : '$gray700'} fontSize={12}>
+                {region.latitude.toFixed(2)}, {region.longitude.toFixed(2)}
+              </Text>
+            </Box>
+          </HStack>
+        </HStack>
+      </Box>
+    </Box>
+  );
+};
+
+const styles = StyleSheet.create({
+  map: {
+    width: Dimensions.get('window').width,
+    height: Dimensions.get('window').height,
+  },
+});
+
+export default MapViewScreen;

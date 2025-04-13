@@ -1,0 +1,95 @@
+/* WhatToDoAI/web/src/styles/darkMode.css */
+
+/* Dark mode styles */
+body.dark-mode {
+  --color-background: #1a202c;
+  --color-text: #f7fafc;
+  --color-text-secondary: #cbd5e0;
+  --color-border: #2d3748;
+  --color-card-bg: #2d3748;
+  --color-input-bg: #2d3748;
+  --color-input-text: #f7fafc;
+  --color-input-placeholder: #a0aec0;
+  --color-button-secondary-bg: #2d3748;
+  --color-button-secondary-text: #f7fafc;
+  --color-button-secondary-border: #4a5568;
+  --color-shadow: rgba(0, 0, 0, 0.3);
+  --color-hover: rgba(255, 255, 255, 0.05);
+  --color-success-bg: #1c4532;
+  --color-success-text: #68d391;
+  --color-error-bg: #742a2a;
+  --color-error-text: #fc8181;
+  --color-warning-bg: #744210;
+  --color-warning-text: #f6ad55;
+  --color-info-bg: #2a4365;
+  --color-info-text: #63b3ed;
+  
+  background-color: var(--color-background);
+  color: var(--color-text);
+}
+
+/* Light mode (default) variables */
+body {
+  --color-background: #ffffff;
+  --color-text: #1a202c;
+  --color-text-secondary: #4a5568;
+  --color-border: #e2e8f0;
+  --color-card-bg: #ffffff;
+  --color-input-bg: #f7fafc;
+  --color-input-text: #1a202c;
+  --color-input-placeholder: #a0aec0;
+  --color-button-secondary-bg: #f7fafc;
+  --color-button-secondary-text: #4a5568;
+  --color-button-secondary-border: #e2e8f0;
+  --color-shadow: rgba(0, 0, 0, 0.1);
+  --color-hover: rgba(0, 0, 0, 0.05);
+  --color-success-bg: #f0fff4;
+  --color-success-text: #38a169;
+  --color-error-bg: #fff5f5;
+  --color-error-text: #e53e3e;
+  --color-warning-bg: #fffaf0;
+  --color-warning-text: #dd6b20;
+  --color-info-bg: #ebf8ff;
+  --color-info-text: #3182ce;
+}
+
+/* Dark mode overrides for common components */
+body.dark-mode .card,
+body.dark-mode .activity-card,
+body.dark-mode .itinerary-card {
+  background-color: var(--color-card-bg);
+  box-shadow: 0 4px 6px var(--color-shadow);
+}
+
+body.dark-mode input,
+body.dark-mode select,
+body.dark-mode textarea {
+  background-color: var(--color-input-bg);
+  color: var(--color-input-text);
+  border-color: var(--color-border);
+}
+
+body.dark-mode input::placeholder,
+body.dark-mode textarea::placeholder {
+  color: var(--color-input-placeholder);
+}
+
+body.dark-mode .button.secondary {
+  background-color: var(--color-button-secondary-bg);
+  color: var(--color-button-secondary-text);
+  border-color: var(--color-button-secondary-border);
+}
+
+body.dark-mode .filters-container,
+body.dark-mode .sidebar {
+  background-color: var(--color-card-bg);
+  border-color: var(--color-border);
+}
+
+/* Transition for smooth theme switching */
+body,
+body.dark-mode,
+body.dark-mode *,
+* {
+  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease, box-shadow 0.3s ease;
+}
