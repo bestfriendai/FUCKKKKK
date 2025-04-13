@@ -1,7 +1,8 @@
 {
   "expo": {
-    "name": "mobile",
+    "name": "WhatToDoAI",
     "slug": "mobile",
+    "description": "Discover exciting activities and create itineraries for your trips",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -29,7 +30,7 @@
         "foregroundImage": "./assets/adaptive-icon.png",
         "backgroundColor": "#ffffff"
       },
-      "package": "com.trappat.mobile",
+      "package": "com.trappat.whattodoai",
       "permissions": [
         "ACCESS_FINE_LOCATION",
         "ACCESS_COARSE_LOCATION",
@@ -56,7 +57,12 @@
       }
     },
     "updates": {
-      "url": "https://u.expo.dev/5b38d272-8c06-4ed5-a806-13d400aadcfe"
+      "url": "https://u.expo.dev/5b38d272-8c06-4ed5-a806-13d400aadcfe",
+      "fallbackToCacheTimeout": 0,
+      "enabled": true
+    },
+    "runtimeVersion": {
+      "policy": "appVersion"
     }
   }
 }

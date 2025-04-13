@@ -2,22 +2,22 @@
 // Note: expo-constants is no longer needed for these specific variables
 // API Configuration
 export const API_CONFIG = {
-  BASE_URL: `${process.env.EXPO_PUBLIC_SUPABASE_URL ?? ''}/functions/v1`, // Derived from Supabase URL
+  BASE_URL: `https://todtibssabkyiqoaylqo.supabase.co/functions/v1`, // Supabase MCP URL
   TIMEOUT: 10000, // 10 seconds
   RETRY_ATTEMPTS: 3,
 };
 
 // Authentication Configuration
 export const AUTH_CONFIG = {
-  SUPABASE_URL: process.env.EXPO_PUBLIC_SUPABASE_URL ?? 'https://your-supabase-project.supabase.co', // Loaded from .env
-  SUPABASE_ANON_KEY: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? 'your-supabase-anon-key', // Loaded from .env
+  SUPABASE_URL: process.env.EXPO_PUBLIC_SUPABASE_URL ?? 'https://todtibssabkyiqoaylqo.supabase.co', // Supabase MCP URL
+  SUPABASE_ANON_KEY: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRvZHRpYnNzYWJreWlxb2F5bHFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ0MjAyNzcsImV4cCI6MjA1OTk5NjI3N30.yEAVvLirhthkxSKMTAJWYe1Db7qwhlCQb67Z8GoBkBc', // Supabase MCP anon key
   SESSION_STORAGE_KEY: 'whattodoai_session',
 };
 
 // API Keys (for compatibility with existing code)
 export const API_KEYS = {
-  SUPABASE_URL: process.env.EXPO_PUBLIC_SUPABASE_URL ?? 'https://your-supabase-project.supabase.co', // Loaded from .env
-  SUPABASE_ANON_KEY: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? 'your-supabase-anon-key', // Loaded from .env
+  SUPABASE_URL: process.env.EXPO_PUBLIC_SUPABASE_URL ?? 'https://todtibssabkyiqoaylqo.supabase.co', // Supabase MCP URL
+  SUPABASE_ANON_KEY: process.env.EXPO_PUBLIC_SUPABASE_ANON_KEY ?? 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRvZHRpYnNzYWJreWlxb2F5bHFvIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQ0MjAyNzcsImV4cCI6MjA1OTk5NjI3N30.yEAVvLirhthkxSKMTAJWYe1Db7qwhlCQb67Z8GoBkBc', // Supabase MCP anon key
   EVENTBRITE_TOKEN: process.env.EXPO_PUBLIC_EVENTBRITE_TOKEN ?? 'EUB5KUFLJH2SKVCHVD3E', // Eventbrite private token
   EVENTBRITE_PUBLIC_TOKEN: process.env.EXPO_PUBLIC_EVENTBRITE_PUBLIC_TOKEN ?? 'C4WQAR3XB7XX2AYOUEQ4', // Eventbrite public token
   RAPIDAPI_KEY: process.env.EXPO_PUBLIC_RAPIDAPI_KEY ?? '33351bd536msha426eb3e02f04cdp1c6c75jsnb775e95605b8', // RapidAPI key

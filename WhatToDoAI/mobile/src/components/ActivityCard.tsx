@@ -30,7 +30,7 @@ const ActivityCard: React.FC<ActivityCardProps> = ({ activity, onPress }) => {
                     />
                 </YStack>
             ) : (
-                <YStack height={150}>
+                <YStack height={150} justifyContent="center" alignItems="center">
                     <Text>No Image Available</Text>
                 </YStack>
             )}
@@ -67,7 +67,7 @@ const ActivityCard: React.FC<ActivityCardProps> = ({ activity, onPress }) => {
                         borderBottomLeftRadius: 8
                     }}
                 >
-                    <Text fontSize={10} color={activity.source === 'Eventbrite' ? 'white' : 'white'}>
+                    <Text fontSize={10} color="white">
                         {activity.source}
                     </Text>
                 </XStack>

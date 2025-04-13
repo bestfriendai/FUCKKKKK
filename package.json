@@ -1,0 +1,20 @@
+{
+  "name": "whattodoai",
+  "version": "1.0.0",
+  "description": "WhatToDoAI - Discover exciting activities and create itineraries for your trips",
+  "scripts": {
+    "start": "cd WhatToDoAI/mobile && expo start",
+    "android": "cd WhatToDoAI/mobile && expo start --android",
+    "ios": "cd WhatToDoAI/mobile && expo start --ios",
+    "web": "cd WhatToDoAI/mobile && expo start --web",
+    "web:app": "cd WhatToDoAI/web && npm start"
+  },
+  "private": true,
+  "workspaces": [
+    "WhatToDoAI/mobile",
+    "WhatToDoAI/web"
+  ],
+  "dependencies": {
+    "expo-dev-client": "^5.0.20"
+  }
+}
